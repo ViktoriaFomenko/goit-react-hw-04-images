@@ -30,7 +30,7 @@ export const App = () => {
         const addImages = response.hits;
 
         setImages(images => [...images, ...addImages]);
-        setTotalLength(response.totalLength);
+        setTotalLength(response.totalHits);
 
         if (response.total === 0) {
           setError(toast.info(`No results for ${query}!`));
@@ -82,11 +82,7 @@ export const App = () => {
 
       {isLoading && <Loader />}
       {showModal && (
-        <Modal
-          onClose={toggleModal}
-          openModal={openModal}
-          largeImageURL={largeImageURL}
-        />
+        <Modal onClose={toggleModal} largeImageURL={largeImageURL} />
       )}
     </div>
   );

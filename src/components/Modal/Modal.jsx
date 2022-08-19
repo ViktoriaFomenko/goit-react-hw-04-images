@@ -4,22 +4,22 @@ import { createPortal } from 'react-dom';
 
 const modalRoot = document.querySelector('#modal-root');
 
-export const Modal = ({ largeImageURL, openModal, toggleModal }) => {
+export const Modal = ({ largeImageURL, onClose }) => {
   useEffect(() => {
     const handleKeyDown = event => {
       if (event.code === 'Escape') {
-        toggleModal();
+        onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [openModal, toggleModal]);
+  }, [onClose]);
 
   const handleBackdropClick = event => {
     if (event.currentTarget === event.target) {
-      openModal();
+      onClose();
     }
   };
 

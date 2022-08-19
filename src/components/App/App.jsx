@@ -24,23 +24,24 @@ export const App = () => {
       return;
     }
     setIsLoading(true);
-    try {
-      const response = APIServise(query, page);
-      const addImages = response.hits;
+    const ImagesFetching = async () => {
+      try {
+        const response = await APIServise(query, page);
+        const addImages = response.hits;
 
-      setImages(images => [...images, ...addImages]);
-      setTotalLength(response.totalLength);
-      console.log(images);
-      console.log(addImages);
+        setImages(images => [...images, ...addImages]);
+        setTotalLength(response.totalLength);
 
-      if (response.total === 0) {
-        setError(toast.info(`No results for ${query}!`));
+        if (response.total === 0) {
+          setError(toast.info(`No results for ${query}!`));
+        }
+      } catch (error) {
+        setError(toast.error('Something went wrong...'));
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      setError(toast.error('Something went wrong...'));
-    } finally {
-      setIsLoading(false);
-    }
+    };
+    ImagesFetching();
   }, [page, query]);
 
   const handleSubmit = value => {
@@ -81,7 +82,11 @@ export const App = () => {
 
       {isLoading && <Loader />}
       {showModal && (
-        <Modal onClose={toggleModal} largeImageURL={largeImageURL} />
+        <Modal
+          onClose={toggleModal}
+          openModal={openModal}
+          largeImageURL={largeImageURL}
+        />
       )}
     </div>
   );

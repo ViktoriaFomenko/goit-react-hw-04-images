@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { useState, useEffect } from 'react';
 import { Searchbar } from '../Searchbar/Searchbar';
 import { ImageGallery } from '../ImageGallery/ImageGallery';
 import { Button } from '../Button/Button';
@@ -9,91 +9,80 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import APIServise from '../../ApiServise/ApiServise';
 
-export class App extends Component {
-  state = {
-    images: [],
-    query: '',
-    page: 1,
-    largeImageURL: '',
-    totalLength: 0,
-    isLoading: false,
-    showModal: false,
-    error: null,
-  };
+export const App = () => {
+  const [images, setImages] = useState([]);
+  const [query, setQuery] = useState('');
+  const [page, setPage] = useState(1);
+  const [largeImageURL, setLargeImageURL] = useState('');
+  const [totalLength, setTotalLength] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [error, setError] = useState(null);
 
-  async componentDidUpdate(_, prevState) {
-    const { query, page } = this.state;
-    if (prevState.query !== query || prevState.page !== page) {
-      this.setState({ isLoading: true });
-
-      try {
-        const response = await APIServise(query, page);
-        const addImages = response.hits;
-        this.setState(({ images, page }) => ({
-          images: [...images, ...addImages],
-          totalLength: response.totalHits,
-        }));
-        if (response.total === 0) {
-          this.setState({ error: toast.info(`No results for ${query}!`) });
-        }
-      } catch (error) {
-        this.setState({ error: toast.error('Something went wrong...') });
-      } finally {
-        this.setState({ isLoading: false });
-      }
+  useEffect(() => {
+    if (!query) {
+      return;
     }
-  }
+    setIsLoading(true);
+    try {
+      const response = APIServise(query, page);
+      const addImages = response.hits;
 
-  handleSubmit = value => {
+      setImages(images => [...images, ...addImages]);
+      setTotalLength(response.totalLength);
+      console.log(images);
+      console.log(addImages);
+
+      if (response.total === 0) {
+        setError(toast.info(`No results for ${query}!`));
+      }
+    } catch (error) {
+      setError(toast.error('Something went wrong...'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, [page, query]);
+
+  const handleSubmit = value => {
     if (value.trim() === '') {
       return toast.warning('Please enter something!');
     }
 
-    this.setState({
-      images: [],
-      query: value,
-      page: 1,
-    });
+    setImages([]);
+    setQuery(value);
+    setPage(1);
   };
 
-  openModal = largeImageURL => {
-    this.setState({
-      showModal: true,
-      largeImageURL: largeImageURL,
-    });
+  const openModal = largeImageURL => {
+    setShowModal(true);
+    setLargeImageURL(largeImageURL);
   };
 
-  toggleModal = () => {
-    this.setState(({ showModal }) => ({
-      showModal: !showModal,
-    }));
+  const toggleModal = () => {
+    setShowModal(!showModal);
   };
 
-  LoadMore = () => {
-    this.setState(prevState => ({ page: prevState.page + 1 }));
+  const LoadMore = () => {
+    setPage(prevPage => prevPage + 1);
   };
 
-  render() {
-    const { images, isLoading, showModal, error, largeImageURL, totalLength } =
-      this.state;
-    return (
-      <div className={css.App}>
-        <ToastContainer autoClose={2000} position="top-center" closeOnClick />
-        <Searchbar onSubmit={this.handleSubmit} />
+  return (
+    <div className={css.App}>
+      <ToastContainer autoClose={2000} position="top-center" closeOnClick />
+      <Searchbar onSubmit={handleSubmit} />
 
-        {images.length > 0 && !error && (
-          <ImageGallery images={images} openModal={this.openModal} />
-        )}
+      {images.length > 0 && !error && (
+        <ImageGallery images={images} openModal={openModal} />
+      )}
 
-        {!isLoading && images.length !== totalLength && !error && (
-          <Button onClick={this.LoadMore} />
-        )}
+      {!isLoading && images.length !== totalLength && !error && (
+        <Button onClick={LoadMore} />
+      )}
 
-        {isLoading && <Loader />}
-        {showModal && (
-          <Modal onClose={this.toggleModal} largeImageURL={largeImageURL} />
-        )}
-      </div>
-    );
-  }
-}
+      {isLoading && <Loader />}
+      {showModal && (
+        <Modal onClose={toggleModal} largeImageURL={largeImageURL} />
+      )}
+    </div>
+  );
+};
